@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct CaptureReviewView: View {
     @Environment(AppStore.self) private var store
@@ -6,6 +7,7 @@ struct CaptureReviewView: View {
 
     @State private var draft: CaptureDraft
     @State private var showSavedMessage = false
+    @State private var didSave = false
 
     init(draft: CaptureDraft) {
         _draft = State(initialValue: draft)
@@ -14,6 +16,34 @@ struct CaptureReviewView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: Space.lg) {
+                if let capturedImage {
+                    SectionCard {
+                        VStack(alignment: .leading, spacing: Space.md) {
+                            HStack {
+                                Label("Captured page", systemImage: "viewfinder")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.ink)
+
+                                Spacer()
+
+                                Text(selectedBookTitle)
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(.inkMuted)
+                            }
+
+                            Image(uiImage: capturedImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: .infinity)
+                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .overlay {
+                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                                        .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                                }
+                        }
+                    }
+                }
+
                 SectionCard {
                     VStack(alignment: .leading, spacing: Space.sm) {
                         if !store.books.isEmpty {
@@ -59,6 +89,7 @@ struct CaptureReviewView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Save") {
+                    didSave = true
                     draft.bookTitle = selectedBookTitle
                     store.saveDraftToLibrary(draft)
                     showSavedMessage = true
@@ -82,6 +113,11 @@ struct CaptureReviewView: View {
         } message: {
             Text("The edited quotes were added to \(selectedBookTitle).")
         }
+        .onDisappear {
+            if !didSave {
+                store.replaceDraft(draft)
+            }
+        }
     }
 
     private var selectedBookTitle: String {
@@ -99,6 +135,11 @@ struct CaptureReviewView: View {
         draft.extractedQuotes.contains {
             !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
+    }
+
+    private var capturedImage: UIImage? {
+        guard let imageData = draft.capturedImageData else { return nil }
+        return UIImage(data: imageData)
     }
 }
 

@@ -4,6 +4,7 @@ struct CaptureDraft: Hashable, Codable {
     var selectedBookID: UUID?
     var bookTitle: String
     var sourceNote: String
+    var capturedImageData: Data?
     var guidance: [String]
     var extractedQuotes: [DraftQuote]
 
@@ -17,7 +18,8 @@ struct CaptureDraft: Hashable, Codable {
         CaptureDraft(
             selectedBookID: book?.id,
             bookTitle: book?.title ?? "Select a book",
-            sourceNote: "One underlined paragraph with a small margin note.",
+            sourceNote: "",
+            capturedImageData: nil,
             guidance: defaultGuidance,
             extractedQuotes: [
                 DraftQuote(

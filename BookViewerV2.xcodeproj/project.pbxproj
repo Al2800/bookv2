@@ -261,6 +261,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Book Viewer V2";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Book Viewer V2 uses the camera to capture a marked page and carry it into review.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Viewer V2 uses your photos so you can import a marked page into review.";
 				INFOPLIST_KEY_UILaunchScreen_GENERATION = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -288,6 +290,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Book Viewer V2";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Book Viewer V2 uses the camera to capture a marked page and carry it into review.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Viewer V2 uses your photos so you can import a marked page into review.";
 				INFOPLIST_KEY_UILaunchScreen_GENERATION = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
