@@ -72,12 +72,40 @@ struct CaptureReviewView: View {
                 }
 
                 VStack(alignment: .leading, spacing: Space.md) {
-                    Text("Extracted quotes")
-                        .font(.headline)
-                        .foregroundStyle(.ink)
+                    HStack(alignment: .center) {
+                        Text("Extracted quotes")
+                            .font(.headline)
+                            .foregroundStyle(.ink)
 
-                    ForEach($draft.extractedQuotes) { $quote in
-                        EditableDraftQuoteCard(quote: $quote)
+                        Spacer()
+
+                        Button {
+                            addManualQuote()
+                        } label: {
+                            Label("Add quote", systemImage: "plus")
+                                .font(.subheadline.weight(.semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.ink)
+                    }
+
+                    Text("OCR should give you a fast first draft, not a final answer. Keep the marked passage, delete the noise, and add anything it missed.")
+                        .font(.subheadline)
+                        .foregroundStyle(.inkMuted)
+
+                    if draft.extractedQuotes.isEmpty {
+                        EmptyReviewState {
+                            addManualQuote()
+                        }
+                    } else {
+                        ForEach(Array(draft.extractedQuotes.enumerated()), id: \.element.id) { index, quote in
+                            EditableDraftQuoteCard(
+                                quote: $draft.extractedQuotes[index],
+                                onRemove: {
+                                    removeQuote(id: quote.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -141,6 +169,21 @@ struct CaptureReviewView: View {
         guard let imageData = draft.capturedImageData else { return nil }
         return UIImage(data: imageData)
     }
+
+    private func addManualQuote() {
+        draft.extractedQuotes.append(
+            DraftQuote(
+                text: "",
+                page: draft.extractedQuotes.first?.page ?? 1,
+                confidence: "Manual",
+                marginNote: nil
+            )
+        )
+    }
+
+    private func removeQuote(id: UUID) {
+        draft.extractedQuotes.removeAll { $0.id == id }
+    }
 }
 
 #Preview {
@@ -152,10 +195,28 @@ struct CaptureReviewView: View {
 
 private struct EditableDraftQuoteCard: View {
     @Binding var quote: DraftQuote
+    let onRemove: () -> Void
 
     var body: some View {
         SectionCard {
             VStack(alignment: .leading, spacing: Space.md) {
+                HStack(alignment: .center) {
+                    Text("Draft passage")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.ink)
+
+                    Spacer()
+
+                    Button(role: .destructive) {
+                        onRemove()
+                    } label: {
+                        Label("Remove", systemImage: "trash")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .buttonStyle(.plain)
+                    .foregroundStyle(.inkMuted)
+                }
+
                 TextField("Extracted text", text: $quote.text, axis: .vertical)
                     .textFieldStyle(.plain)
                     .font(.body)
@@ -181,6 +242,36 @@ private struct EditableDraftQuoteCard: View {
                 )
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(2...4)
+            }
+        }
+    }
+}
+
+private struct EmptyReviewState: View {
+    let onAddQuote: () -> Void
+
+    var body: some View {
+        SectionCard {
+            VStack(alignment: .leading, spacing: Space.md) {
+                Text("No usable quote yet")
+                    .font(.headline)
+                    .foregroundStyle(.ink)
+
+                Text("OCR could not find a clean passage worth saving. Add the marked quote manually and keep moving.")
+                    .font(.body)
+                    .foregroundStyle(.inkSoft)
+
+                Button {
+                    onAddQuote()
+                } label: {
+                    Label("Add quote manually", systemImage: "square.and.pencil")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.paper)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, Space.sm)
+                        .background(Color.ink, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
