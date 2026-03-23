@@ -9,11 +9,12 @@ The rule for this repo is simple: do not port old implementation code. Rebuild o
 This repo contains a minimal SwiftUI iOS app scaffold with:
 
 - A small library tab with add-book support
-- A capture tab that starts from a selected book and carries a captured page into review
+- A capture tab that starts from a selected book, supports camera or photo import, and carries a captured page into review
 - An editable review screen that shows the captured page and saves draft quotes into the library
+- A local OCR handoff that turns the captured page into editable draft quotes before review
 - Lightweight local JSON persistence for books and draft state
 
-The app still has no camera integration, networking, or AI extraction yet. The current goal is proving the save-and-rediscover loop before adding those boundaries.
+The app still has no networking, cloud sync, or remote AI extraction. The current goal is proving the save-and-rediscover loop before adding those boundaries.
 
 ## V2 Product Scope
 
@@ -43,7 +44,7 @@ xcodebuild -project BookViewerV2.xcodeproj -scheme BookViewerV2 -destination 'ge
 
 ## Next Steps
 
-- Replace the simple camera/import handoff with a dedicated camera shell
-- Add a real extraction handoff into the review screen
+- Tighten the OCR output so it prioritizes the marked passage instead of broad page text
+- Add a better empty/manual correction path when OCR misses the quote entirely
 - Tighten the book detail and return flow after saving
 - Decide whether the first persisted model should stay JSON-backed or graduate to SwiftData

@@ -10,6 +10,7 @@ struct CaptureHomeView: View {
     @State private var showCamera = false
     @State private var showReview = false
     @State private var isLoadingImage = false
+    @State private var isExtractingText = false
 
     var body: some View {
         NavigationStack {
@@ -53,7 +54,7 @@ struct CaptureHomeView: View {
                                 }
                                 .pickerStyle(.menu)
 
-                                Text("Drafts are intentionally simple for now. The point is to prove that review-and-save feels obvious before the real camera arrives.")
+                                Text("Keep this step narrow. The goal is a clean handoff from page capture into review, not a feature-heavy camera screen.")
                                     .font(.subheadline)
                                     .foregroundStyle(.inkMuted)
                             }
@@ -114,15 +115,22 @@ struct CaptureHomeView: View {
 
                         if capturedImageData != nil {
                             Button {
-                                pushDraftToReview()
+                                beginReview()
                             } label: {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Continue to review")
-                                        .font(.headline.weight(.semibold))
+                                HStack(alignment: .center, spacing: Space.md) {
+                                    if isExtractingText {
+                                        ProgressView()
+                                            .tint(.paper)
+                                    }
 
-                                    Text("Carry this page straight into the editable review screen.")
-                                        .font(.caption)
-                                        .foregroundStyle(Color.paper.opacity(0.78))
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(isExtractingText ? "Extracting text…" : "Continue to review")
+                                            .font(.headline.weight(.semibold))
+
+                                        Text("Run local OCR, then carry this page straight into the editable review screen.")
+                                            .font(.caption)
+                                            .foregroundStyle(Color.paper.opacity(0.78))
+                                    }
                                 }
                                 .foregroundStyle(.paper)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -131,6 +139,7 @@ struct CaptureHomeView: View {
                                 .background(Color.ink, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                             }
                             .buttonStyle(.plain)
+                            .disabled(isExtractingText)
                         }
                     }
                 }
@@ -208,19 +217,30 @@ struct CaptureHomeView: View {
         }
     }
 
-    private func pushDraftToReview() {
+    private func beginReview() {
         guard let selectedBook = store.books.first(where: { $0.id == selectedBookID.wrappedValue }),
               let capturedImageData
         else {
             return
         }
 
-        var draft = CaptureDraft.template(for: selectedBook)
-        draft.sourceNote = captureNote.trimmingCharacters(in: .whitespacesAndNewlines)
-        draft.capturedImageData = capturedImageData
+        isExtractingText = true
 
-        store.replaceDraft(draft)
-        showReview = true
+        Task {
+            let extraction = await PageTextExtractor.extract(from: capturedImageData)
+            var draft = CaptureDraft.template(for: selectedBook)
+
+            let trimmedNote = captureNote.trimmingCharacters(in: .whitespacesAndNewlines)
+            draft.sourceNote = trimmedNote.isEmpty ? extraction.suggestedSourceNote : trimmedNote
+            draft.capturedImageData = capturedImageData
+            draft.extractedQuotes = extraction.quotes
+
+            await MainActor.run {
+                isExtractingText = false
+                store.replaceDraft(draft)
+                showReview = true
+            }
+        }
     }
 }
 

@@ -21,20 +21,7 @@ struct CaptureDraft: Hashable, Codable {
             sourceNote: "",
             capturedImageData: nil,
             guidance: defaultGuidance,
-            extractedQuotes: [
-                DraftQuote(
-                    text: "The real work of the artist is a way of being in the world.",
-                    page: 12,
-                    confidence: "High",
-                    marginNote: "This is the line to save."
-                ),
-                DraftQuote(
-                    text: "Awareness is the instrument of choice.",
-                    page: 45,
-                    confidence: "Medium",
-                    marginNote: nil
-                )
-            ]
+            extractedQuotes: []
         )
     }
 }
