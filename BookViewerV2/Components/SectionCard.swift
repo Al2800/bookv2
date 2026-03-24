@@ -12,12 +12,13 @@ struct SectionCard<Content: View>: View {
             .padding(Space.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(Color.white.opacity(0.72))
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .fill(Color.card.opacity(0.88))
             )
             .overlay {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                    .stroke(Color.line, lineWidth: 1)
             }
+            .shadow(color: Color.ink.opacity(0.05), radius: 18, y: 8)
     }
 }

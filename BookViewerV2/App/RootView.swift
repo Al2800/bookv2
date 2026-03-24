@@ -14,6 +14,8 @@ struct RootView: View {
                 }
         }
         .tint(.ink)
+        .toolbarBackground(Color.paper, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
     }
 }
 

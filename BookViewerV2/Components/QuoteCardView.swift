@@ -8,22 +8,25 @@ struct QuoteCardView: View {
     var body: some View {
         SectionCard {
             VStack(alignment: .leading, spacing: Space.md) {
-                Text("“")
-                    .font(.system(size: 42, weight: .medium, design: .serif))
-                    .foregroundStyle(.inkMuted)
+                HStack(alignment: .top, spacing: Space.sm) {
+                    Text("“")
+                        .font(.system(size: 30, weight: .medium, design: .serif))
+                        .foregroundStyle(.inkMuted)
 
-                Text(text)
-                    .font(.body)
-                    .foregroundStyle(.ink)
-                    .lineSpacing(4)
+                    Text(text)
+                        .font(.body)
+                        .foregroundStyle(.ink)
+                        .lineSpacing(5)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 if let note, !note.isEmpty {
                     Text(note)
-                        .font(.subheadline)
+                        .font(.footnote)
                         .foregroundStyle(.inkSoft)
                         .padding(.horizontal, Space.md)
                         .padding(.vertical, Space.sm)
-                        .background(Color.wash.opacity(0.8), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Color.wash.opacity(0.82), in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
                 }
 
                 Text(footer)

@@ -29,51 +29,65 @@ struct CaptureReviewView: View {
                                 Text(selectedBookTitle)
                                     .font(.caption.weight(.medium))
                                     .foregroundStyle(.inkMuted)
+                                    .lineLimit(1)
                             }
 
                             Image(uiImage: capturedImage)
                                 .resizable()
                                 .scaledToFit()
                                 .frame(maxWidth: .infinity)
-                                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
                                 .overlay {
-                                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                        .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                                        .stroke(Color.line, lineWidth: 1)
                                 }
                         }
                     }
                 }
 
                 SectionCard {
-                    VStack(alignment: .leading, spacing: Space.sm) {
-                        if !store.books.isEmpty {
-                            Picker("Book", selection: $draft.selectedBookID) {
-                                ForEach(store.books) { book in
-                                    Text(book.title).tag(Optional(book.id))
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        HStack {
+                            if !store.books.isEmpty {
+                                Picker("Book", selection: $draft.selectedBookID) {
+                                    ForEach(store.books) { book in
+                                        Text(book.title).tag(Optional(book.id))
+                                    }
                                 }
+                                .pickerStyle(.menu)
                             }
-                            .pickerStyle(.menu)
+
+                            Spacer()
+
+                            Text("\(draft.extractedQuotes.count) drafts")
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(.inkMuted)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color.wash, in: Capsule())
                         }
 
                         Text(selectedBookTitle)
-                            .font(.title2.weight(.semibold))
+                            .font(.title3.weight(.semibold))
                             .foregroundStyle(.ink)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         TextField("What did this page contain?", text: $draft.sourceNote, axis: .vertical)
                             .textFieldStyle(.plain)
-                            .font(.body)
+                            .font(.subheadline)
                             .foregroundStyle(.inkSoft)
                             .lineLimit(2...4)
 
-                        Text("The review screen is where trust is won or lost. Each extracted passage should be immediately readable, editable, and worth saving.")
+                        Text("Keep the marked passage. Delete the noise.")
                             .font(.subheadline)
                             .foregroundStyle(.inkMuted)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
 
                 VStack(alignment: .leading, spacing: Space.md) {
                     HStack(alignment: .center) {
-                        Text("Extracted quotes")
+                        Text("Draft quotes")
                             .font(.headline)
                             .foregroundStyle(.ink)
 
@@ -88,10 +102,6 @@ struct CaptureReviewView: View {
                         .buttonStyle(.plain)
                         .foregroundStyle(.ink)
                     }
-
-                    Text("OCR should give you a fast first draft, not a final answer. Keep the marked passage, delete the noise, and add anything it missed.")
-                        .font(.subheadline)
-                        .foregroundStyle(.inkMuted)
 
                     if draft.extractedQuotes.isEmpty {
                         EmptyReviewState {
@@ -110,6 +120,8 @@ struct CaptureReviewView: View {
                 }
             }
             .padding(Space.lg)
+            .padding(.bottom, Space.xl)
+            .appContentColumn()
         }
         .background(Color.paper.ignoresSafeArea())
         .navigationTitle("Review")
@@ -222,14 +234,18 @@ private struct EditableDraftQuoteCard: View {
                     .font(.body)
                     .foregroundStyle(.ink)
                     .lineLimit(3...8)
+                    .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: Space.md) {
-                    TextField("Page", value: $quote.page, format: .number)
-                        .textFieldStyle(.roundedBorder)
-                        .keyboardType(.numberPad)
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: Space.md) {
+                        pageField
+                        confidenceField
+                    }
 
-                    TextField("Confidence", text: $quote.confidence)
-                        .textFieldStyle(.roundedBorder)
+                    VStack(spacing: Space.md) {
+                        pageField
+                        confidenceField
+                    }
                 }
 
                 TextField(
@@ -245,6 +261,17 @@ private struct EditableDraftQuoteCard: View {
             }
         }
     }
+
+    private var pageField: some View {
+        TextField("Page", value: $quote.page, format: .number)
+            .textFieldStyle(.roundedBorder)
+            .keyboardType(.numberPad)
+    }
+
+    private var confidenceField: some View {
+        TextField("Confidence", text: $quote.confidence)
+            .textFieldStyle(.roundedBorder)
+    }
 }
 
 private struct EmptyReviewState: View {
@@ -257,9 +284,10 @@ private struct EmptyReviewState: View {
                     .font(.headline)
                     .foregroundStyle(.ink)
 
-                Text("OCR could not find a clean passage worth saving. Add the marked quote manually and keep moving.")
-                    .font(.body)
+                Text("OCR did not find a clean passage. Add it manually and keep moving.")
+                    .font(.subheadline)
                     .foregroundStyle(.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Button {
                     onAddQuote()
@@ -269,7 +297,7 @@ private struct EmptyReviewState: View {
                         .foregroundStyle(.paper)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, Space.sm)
-                        .background(Color.ink, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .background(Color.ink, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
                 }
                 .buttonStyle(.plain)
             }

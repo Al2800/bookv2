@@ -9,14 +9,25 @@ struct LibraryView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
                     SectionCard {
-                        VStack(alignment: .leading, spacing: Space.sm) {
-                            Text("A simpler library")
-                                .font(.title2.weight(.semibold))
+                        VStack(alignment: .leading, spacing: Space.md) {
+                            HStack {
+                                CapsuleTag(label: "Library")
+
+                                Spacer()
+
+                                Text("\(store.books.reduce(0) { $0 + $1.quoteCount }) saved")
+                                    .font(.caption.weight(.medium))
+                                    .foregroundStyle(.inkMuted)
+                            }
+
+                            Text("Keep the lines worth keeping.")
+                                .font(.title3.weight(.semibold))
                                 .foregroundStyle(.ink)
 
-                            Text("V2 starts with one promise: it should be easy to capture a meaningful passage, trust the review screen, and find it again later.")
-                                .font(.body)
+                            Text("Capture fast. Review cleanly. Find them later.")
+                                .font(.subheadline)
                                 .foregroundStyle(.inkSoft)
+                                .fixedSize(horizontal: false, vertical: true)
 
                             HStack(spacing: Space.md) {
                                 LibraryStatView(label: "Books", value: "\(store.books.count)")
@@ -26,9 +37,22 @@ struct LibraryView: View {
                     }
 
                     VStack(alignment: .leading, spacing: Space.md) {
-                        Text("Library")
-                            .font(.headline)
-                            .foregroundStyle(.ink)
+                        HStack {
+                            Text("Books")
+                                .font(.headline)
+                                .foregroundStyle(.ink)
+
+                            Spacer()
+
+                            if !store.books.isEmpty {
+                                Text("\(store.books.count)")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.inkMuted)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 6)
+                                    .background(Color.wash, in: Capsule())
+                            }
+                        }
 
                         if store.books.isEmpty {
                             SectionCard {
@@ -37,9 +61,10 @@ struct LibraryView: View {
                                         .font(.headline)
                                         .foregroundStyle(.ink)
 
-                                    Text("Start small. Add one book and test whether saving a passage feels obviously correct.")
-                                        .font(.body)
+                                    Text("Add one book and make sure saving a passage feels effortless.")
+                                        .font(.subheadline)
                                         .foregroundStyle(.inkSoft)
+                                        .fixedSize(horizontal: false, vertical: true)
 
                                     Button("Add your first book") {
                                         showingAddBook = true
@@ -62,6 +87,8 @@ struct LibraryView: View {
                     }
                 }
                 .padding(Space.lg)
+                .padding(.bottom, Space.xl)
+                .appContentColumn()
             }
             .background(Color.paper.ignoresSafeArea())
             .navigationTitle("Book Viewer")
@@ -91,27 +118,33 @@ private struct BookRowView: View {
 
     var body: some View {
         SectionCard {
-            HStack(alignment: .top, spacing: Space.md) {
+            HStack(alignment: .center, spacing: Space.md) {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.wash)
-                    .frame(width: 54, height: 76)
+                    .frame(width: 58, height: 82)
                     .overlay {
                         Image(systemName: "book.closed")
                             .font(.title3)
                             .foregroundStyle(.inkSoft)
                     }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.line, lineWidth: 1)
+                    }
 
-                VStack(alignment: .leading, spacing: Space.xs) {
+                VStack(alignment: .leading, spacing: 5) {
                     Text(book.title)
                         .font(.headline)
                         .foregroundStyle(.ink)
+                        .lineLimit(2)
 
                     Text(book.author)
                         .font(.subheadline)
                         .foregroundStyle(.inkSoft)
+                        .lineLimit(1)
 
                     Text(book.summary)
-                        .font(.subheadline)
+                        .font(.footnote)
                         .foregroundStyle(.inkMuted)
                         .lineLimit(2)
 
@@ -146,7 +179,7 @@ private struct LibraryStatView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Space.md)
-        .background(Color.wash, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(Color.wash, in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
     }
 }
 

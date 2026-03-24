@@ -17,35 +17,52 @@ struct CaptureHomeView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.lg) {
                     SectionCard {
-                        VStack(alignment: .leading, spacing: Space.sm) {
-                            Text("Capture is the product")
-                                .font(.title2.weight(.semibold))
+                        VStack(alignment: .leading, spacing: Space.md) {
+                            CapsuleTag(label: "OCR-first")
+
+                            Text("Capture should feel lighter than writing the quote down.")
+                                .font(.title3.weight(.semibold))
                                 .foregroundStyle(.ink)
 
-                            Text("The camera flow should feel lighter than taking a note by hand. V2 focuses on a short path: pick the book, frame the page, review the extracted quote.")
-                                .font(.body)
+                            Text("Pick the book, frame one marked page, and move straight into review.")
+                                .font(.subheadline)
                                 .foregroundStyle(.inkSoft)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
 
                     if store.books.isEmpty {
                         SectionCard {
                             VStack(alignment: .leading, spacing: Space.sm) {
-                                Text("No book selected")
+                                Text("No books yet")
                                     .font(.headline)
                                     .foregroundStyle(.ink)
 
-                                Text("Add a book in the library first. Capture should always be anchored to a known book.")
-                                    .font(.body)
+                                Text("Library comes first. Add one book, then capture against it.")
+                                    .font(.subheadline)
                                     .foregroundStyle(.inkSoft)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     } else {
                         SectionCard {
                             VStack(alignment: .leading, spacing: Space.md) {
-                                Text("Target book")
-                                    .font(.headline)
-                                    .foregroundStyle(.ink)
+                                HStack {
+                                    Text("Target book")
+                                        .font(.headline)
+                                        .foregroundStyle(.ink)
+
+                                    Spacer()
+
+                                    if let selectedBook {
+                                        Text("\(selectedBook.quoteCount) saved")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.inkMuted)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(Color.wash, in: Capsule())
+                                    }
+                                }
 
                                 Picker("Book", selection: selectedBookID) {
                                     ForEach(store.books) { book in
@@ -54,9 +71,10 @@ struct CaptureHomeView: View {
                                 }
                                 .pickerStyle(.menu)
 
-                                Text("Keep this step narrow. The goal is a clean handoff from page capture into review, not a feature-heavy camera screen.")
+                                Text("One page, one marked passage, one clean review.")
                                     .font(.subheadline)
                                     .foregroundStyle(.inkMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
 
@@ -66,49 +84,16 @@ struct CaptureHomeView: View {
                             isLoadingImage: isLoadingImage
                         )
 
-                        HStack(spacing: Space.md) {
-                            Button {
-                                showCamera = true
-                            } label: {
-                                CaptureActionButtonLabel(
-                                    title: cameraButtonTitle,
-                                    subtitle: cameraButtonSubtitle,
-                                    systemImage: "camera"
-                                )
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(!isCameraAvailable)
+                        captureActionButtons
 
-                            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-                                CaptureActionButtonLabel(
-                                    title: "Photo Library",
-                                    subtitle: "Import an existing page shot",
-                                    systemImage: "photo.on.rectangle"
-                                )
-                            }
-                            .buttonStyle(.plain)
-                        }
+                        SectionCard {
+                            VStack(alignment: .leading, spacing: Space.md) {
+                                Text("Flow")
+                                    .font(.headline)
+                                    .foregroundStyle(.ink)
 
-                        VStack(alignment: .leading, spacing: Space.md) {
-                            Text("Core flow")
-                                .font(.headline)
-                                .foregroundStyle(.ink)
-
-                            ForEach(Array(store.draftCapture.guidance.enumerated()), id: \.offset) { index, step in
-                                SectionCard {
-                                    HStack(alignment: .top, spacing: Space.md) {
-                                        Text("\(index + 1)")
-                                            .font(.headline.weight(.semibold))
-                                            .foregroundStyle(.paper)
-                                            .frame(width: 28, height: 28)
-                                            .background(Color.ink, in: Circle())
-
-                                        Text(step)
-                                            .font(.body)
-                                            .foregroundStyle(.ink)
-
-                                        Spacer(minLength: 0)
-                                    }
+                                ForEach(Array(store.draftCapture.guidance.enumerated()), id: \.offset) { index, step in
+                                    CaptureStepRow(number: index + 1, text: step)
                                 }
                             }
                         }
@@ -123,11 +108,14 @@ struct CaptureHomeView: View {
                                             .tint(.paper)
                                     }
 
+                                    Image(systemName: "sparkles.rectangle.stack")
+                                        .font(.headline)
+
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(isExtractingText ? "Extracting text…" : "Continue to review")
+                                        Text(isExtractingText ? "Extracting text…" : "Review extraction")
                                             .font(.headline.weight(.semibold))
 
-                                        Text("Run local OCR, then carry this page straight into the editable review screen.")
+                                        Text("Run local OCR and edit the marked passage.")
                                             .font(.caption)
                                             .foregroundStyle(Color.paper.opacity(0.78))
                                     }
@@ -136,7 +124,7 @@ struct CaptureHomeView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(.horizontal, Space.lg)
                                 .padding(.vertical, Space.md)
-                                .background(Color.ink, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                                .background(Color.ink, in: RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
                             }
                             .buttonStyle(.plain)
                             .disabled(isExtractingText)
@@ -144,6 +132,8 @@ struct CaptureHomeView: View {
                     }
                 }
                 .padding(Space.lg)
+                .padding(.bottom, Space.xl)
+                .appContentColumn()
             }
             .background(Color.paper.ignoresSafeArea())
             .navigationTitle("Capture")
@@ -180,12 +170,56 @@ struct CaptureHomeView: View {
         UIImagePickerController.isSourceTypeAvailable(.camera)
     }
 
+    private var selectedBook: Book? {
+        store.books.first(where: { $0.id == selectedBookID.wrappedValue })
+    }
+
+    @ViewBuilder
+    private var captureActionButtons: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Space.md) {
+                cameraActionButton
+                photoLibraryActionButton
+            }
+
+            VStack(spacing: Space.md) {
+                cameraActionButton
+                photoLibraryActionButton
+            }
+        }
+    }
+
+    private var cameraActionButton: some View {
+        Button {
+            showCamera = true
+        } label: {
+            CaptureActionButtonLabel(
+                title: cameraButtonTitle,
+                subtitle: cameraButtonSubtitle,
+                systemImage: "camera"
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(!isCameraAvailable)
+    }
+
+    private var photoLibraryActionButton: some View {
+        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+            CaptureActionButtonLabel(
+                title: "Photo Library",
+                subtitle: "Import an existing page shot",
+                systemImage: "photo.on.rectangle"
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
     private var cameraButtonTitle: String {
         isCameraAvailable ? "Camera" : "Camera Unavailable"
     }
 
     private var cameraButtonSubtitle: String {
-        isCameraAvailable ? "Capture a page now" : "Use a real device for live capture"
+        isCameraAvailable ? "Capture a page now" : "Use a device camera"
     }
 
     private func syncFromStore() {
@@ -262,18 +296,29 @@ private struct CapturePreviewCard: View {
     var body: some View {
         SectionCard {
             VStack(alignment: .leading, spacing: Space.md) {
-                Text("Captured page")
-                    .font(.headline)
-                    .foregroundStyle(.ink)
+                HStack {
+                    Text("Captured page")
+                        .font(.headline)
+                        .foregroundStyle(.ink)
+
+                    Spacer()
+
+                    if imageData != nil {
+                        Text("1 page")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(.inkMuted)
+                    }
+                }
 
                 ZStack {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
                         .fill(Color.wash.opacity(0.75))
 
                     if let previewImage {
                         Image(uiImage: previewImage)
                             .resizable()
-                            .scaledToFill()
+                            .scaledToFit()
+                            .padding(Space.md)
                     } else {
                         VStack(spacing: Space.sm) {
                             Image(systemName: "text.viewfinder")
@@ -284,7 +329,7 @@ private struct CapturePreviewCard: View {
                                 .font(.headline)
                                 .foregroundStyle(.ink)
 
-                            Text("Keep it to one page and one obvious marked passage. Simpler input produces a better review screen.")
+                            Text("One obvious marked passage works best.")
                                 .font(.subheadline)
                                 .foregroundStyle(.inkSoft)
                                 .multilineTextAlignment(.center)
@@ -292,17 +337,21 @@ private struct CapturePreviewCard: View {
                         }
                     }
                 }
-                .frame(height: 280)
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+                .frame(height: 260)
+                .clipShape(RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
                 .overlay {
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.white.opacity(0.55), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                        .stroke(Color.line, lineWidth: 1)
                         .overlay(alignment: .center) {
-                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
                                 .stroke(Color.ink.opacity(0.16), style: StrokeStyle(lineWidth: 1, dash: [8, 8]))
                                 .padding(Space.md)
                         }
                 }
+
+                Text("Page note")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.inkMuted)
 
                 TextField("Optional note about the page or marking", text: $captureNote, axis: .vertical)
                     .textFieldStyle(.roundedBorder)
@@ -323,26 +372,51 @@ private struct CaptureActionButtonLabel: View {
                 .font(.headline)
                 .foregroundStyle(.paper)
                 .frame(width: 38, height: 38)
-                .background(Color.ink, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Color.ink, in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.ink)
+                    .lineLimit(1)
 
                 Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.inkMuted)
+                    .lineLimit(2)
             }
 
             Spacer(minLength: 0)
         }
         .padding(Space.md)
+        .frame(minHeight: 82)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(Color.card.opacity(0.86), in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.6), lineWidth: 1)
+            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                .stroke(Color.line, lineWidth: 1)
+        }
+    }
+}
+
+private struct CaptureStepRow: View {
+    let number: Int
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: Space.md) {
+            Text("\(number)")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.paper)
+                .frame(width: 24, height: 24)
+                .background(Color.ink, in: Circle())
+
+            Text(text)
+                .font(.subheadline)
+                .foregroundStyle(.ink)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
         }
     }
 }

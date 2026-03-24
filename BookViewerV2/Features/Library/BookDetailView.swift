@@ -15,33 +15,72 @@ struct BookDetailView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.lg) {
                         SectionCard {
-                            VStack(alignment: .leading, spacing: Space.sm) {
-                                CapsuleTag(label: book.status)
+                            HStack(alignment: .top, spacing: Space.md) {
+                                RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                                    .fill(Color.wash)
+                                    .frame(width: 78, height: 112)
+                                    .overlay {
+                                        Image(systemName: "book.closed")
+                                            .font(.system(size: 28, weight: .medium))
+                                            .foregroundStyle(.inkSoft)
+                                    }
+                                    .overlay {
+                                        RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                                            .stroke(Color.line, lineWidth: 1)
+                                    }
 
-                                Text(book.title)
-                                    .font(.largeTitle.weight(.semibold))
-                                    .foregroundStyle(.ink)
+                                VStack(alignment: .leading, spacing: Space.sm) {
+                                    HStack {
+                                        CapsuleTag(label: book.status)
 
-                                Text(book.author)
-                                    .font(.title3)
-                                    .foregroundStyle(.inkSoft)
+                                        Spacer()
 
-                                Text(book.summary)
-                                    .font(.body)
-                                    .foregroundStyle(.inkMuted)
+                                        Text("\(book.quoteCount) saved")
+                                            .font(.caption.weight(.medium))
+                                            .foregroundStyle(.inkMuted)
+                                    }
+
+                                    Text(book.title)
+                                        .font(.title2.weight(.semibold))
+                                        .foregroundStyle(.ink)
+                                        .fixedSize(horizontal: false, vertical: true)
+
+                                    Text(book.author)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.inkSoft)
+
+                                    Text(book.summary)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.inkMuted)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             }
                         }
 
                         VStack(alignment: .leading, spacing: Space.md) {
-                            Text("Saved quotes")
-                                .font(.headline)
-                                .foregroundStyle(.ink)
+                            HStack {
+                                Text("Saved quotes")
+                                    .font(.headline)
+                                    .foregroundStyle(.ink)
+
+                                Spacer()
+
+                                if !book.quotes.isEmpty {
+                                    Text("\(book.quotes.count)")
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.inkMuted)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 6)
+                                        .background(Color.wash, in: Capsule())
+                                }
+                            }
 
                             if book.quotes.isEmpty {
                                 SectionCard {
-                                    Text("This book is still empty. In v2, empty states stay simple and keep the next action obvious: capture a page.")
-                                        .font(.body)
+                                    Text("No saved passages yet. Capture a marked page when you are ready.")
+                                        .font(.subheadline)
                                         .foregroundStyle(.inkSoft)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
                             } else {
                                 ForEach(book.quotes) { quote in
@@ -55,6 +94,8 @@ struct BookDetailView: View {
                         }
                     }
                     .padding(Space.lg)
+                    .padding(.bottom, Space.xl)
+                    .appContentColumn()
                 }
                 .background(Color.paper.ignoresSafeArea())
                 .navigationTitle(book.title)
