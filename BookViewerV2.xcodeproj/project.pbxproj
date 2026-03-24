@@ -21,6 +21,7 @@
 		A0000000000000000000004B /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000003B /* AppTheme.swift */; };
 		A0000000000000000000004C /* SectionCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000003C /* SectionCard.swift */; };
 		A0000000000000000000004D /* QuoteCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000003D /* QuoteCardView.swift */; };
+		A0000000000000000000004F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000003F /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,6 +40,7 @@
 		A0000000000000000000003B /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		A0000000000000000000003C /* SectionCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SectionCard.swift; sourceTree = "<group>"; };
 		A0000000000000000000003D /* QuoteCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteCardView.swift; sourceTree = "<group>"; };
+		A0000000000000000000003F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +128,14 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		A00000000000000000000027 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				A0000000000000000000003F /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		A00000000000000000000026 /* BookViewerV2 */ = {
 			isa = PBXGroup;
 			children = (
@@ -133,6 +143,7 @@
 				A00000000000000000000021 /* Models */,
 				A00000000000000000000022 /* Features */,
 				A00000000000000000000025 /* Components */,
+				A00000000000000000000027 /* Resources */,
 			);
 			path = BookViewerV2;
 			sourceTree = "<group>";
@@ -193,6 +204,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0000000000000000000004F /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -262,20 +274,18 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Book Viewer V2";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Book Viewer V2 uses the camera to capture a marked page and carry it into review.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Viewer V2 uses your photos so you can import a marked page into review.";
+				CURRENT_PROJECT_VERSION = 22;
+				DEVELOPMENT_TEAM = 92XJSN32W4;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BookViewerV2/Resources/Info.plist;
 				INFOPLIST_KEY_UILaunchScreen_GENERATION = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.BookViewerV2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.acampbell.bookquotes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -290,22 +300,23 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Book Viewer V2";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Book Viewer V2 uses the camera to capture a marked page and carry it into review.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Book Viewer V2 uses your photos so you can import a marked page into review.";
+				CODE_SIGN_IDENTITY = "Apple Distribution: Alastair Campbell (92XJSN32W4)";
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 22;
+				DEVELOPMENT_TEAM = 92XJSN32W4;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = BookViewerV2/Resources/Info.plist;
 				INFOPLIST_KEY_UILaunchScreen_GENERATION = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.BookViewerV2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.acampbell.bookquotes;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE = "a882d1a2-f010-46d2-b5c2-08348baf39ba";
+				PROVISIONING_PROFILE_SPECIFIER = "BookQuotes V2 App Store 20260324";
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
