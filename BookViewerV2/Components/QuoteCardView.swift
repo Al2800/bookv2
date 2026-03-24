@@ -6,33 +6,40 @@ struct QuoteCardView: View {
     let footer: String
 
     var body: some View {
-        SectionCard {
-            VStack(alignment: .leading, spacing: Space.md) {
-                HStack(alignment: .top, spacing: Space.sm) {
-                    Text("“")
-                        .font(.system(size: 30, weight: .medium, design: .serif))
-                        .foregroundStyle(.inkMuted)
+        VStack(alignment: .leading, spacing: Space.md) {
+            HStack(alignment: .top, spacing: Space.sm) {
+                Text("“")
+                    .font(.system(size: 34, weight: .medium, design: .serif))
+                    .foregroundStyle(.accent)
 
-                    Text(text)
-                        .font(.body)
-                        .foregroundStyle(.ink)
-                        .lineSpacing(5)
+                Text(text)
+                    .font(.quoteBody)
+                    .foregroundStyle(.ink)
+                    .lineSpacing(6)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if let note, !note.isEmpty {
+                HStack(alignment: .top, spacing: Space.sm) {
+                    Image(systemName: "note.text")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.brand)
+
+                    Text(note)
+                        .font(.caption)
+                        .foregroundStyle(.inkSoft)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-
-                if let note, !note.isEmpty {
-                    Text(note)
-                        .font(.footnote)
-                        .foregroundStyle(.inkSoft)
-                        .padding(.horizontal, Space.md)
-                        .padding(.vertical, Space.sm)
-                        .background(Color.wash.opacity(0.82), in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
-                }
-
-                Text(footer)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(.inkMuted)
+                .padding(.horizontal, Space.md)
+                .padding(.vertical, Space.sm)
+                .background(Color.paperSecondary, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
             }
+
+            Text(footer)
+                .font(.appMeta)
+                .foregroundStyle(.inkMuted)
         }
+        .padding(Space.lg)
+        .paperCard()
     }
 }

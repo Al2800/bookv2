@@ -13,9 +13,10 @@ struct RootView: View {
                     Label("Capture", systemImage: "viewfinder")
                 }
         }
-        .tint(.ink)
-        .toolbarBackground(Color.paper, for: .tabBar)
+        .tint(.brand)
+        .toolbarBackground(Color.card.opacity(0.98), for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
+        .background(Color.paper.ignoresSafeArea())
     }
 }
 

@@ -3,102 +3,89 @@ import SwiftUI
 struct LibraryView: View {
     @Environment(AppStore.self) private var store
     @State private var showingAddBook = false
+    @State private var searchText = ""
+
+    private var totalQuotes: Int {
+        store.books.reduce(0) { $0 + $1.quoteCount }
+    }
+
+    private var filteredBooks: [Book] {
+        let query = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else { return store.books }
+
+        return store.books.filter { book in
+            let haystacks = [
+                book.title,
+                book.author,
+                book.summary,
+                book.quotes.map(\.text).joined(separator: "\n"),
+                book.quotes.compactMap(\.note).joined(separator: "\n")
+            ]
+
+            return haystacks.joined(separator: "\n").localizedCaseInsensitiveContains(query)
+        }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: Space.lg) {
-                    SectionCard {
+                VStack(alignment: .leading, spacing: Space.xl) {
+                    LibrarySummaryCard(
+                        bookCount: store.books.count,
+                        quoteCount: totalQuotes,
+                        onAddBook: { showingAddBook = true }
+                    )
+
+                    if store.books.isEmpty {
+                        EmptyLibraryCard {
+                            showingAddBook = true
+                        }
+                    } else {
                         VStack(alignment: .leading, spacing: Space.md) {
-                            HStack {
-                                CapsuleTag(label: "Library")
+                            SectionIntro(
+                                eyebrow: "Shelf",
+                                title: searchText.isEmpty ? "Books" : "Search results",
+                                subtitle: searchText.isEmpty
+                                    ? "Open a book, skim the saved lines, and keep capture one tap away."
+                                    : "\(filteredBooks.count) match\(filteredBooks.count == 1 ? "" : "es") for “\(searchText)”."
+                            )
 
-                                Spacer()
-
-                                Text("\(store.books.reduce(0) { $0 + $1.quoteCount }) saved")
-                                    .font(.caption.weight(.medium))
-                                    .foregroundStyle(.inkMuted)
-                            }
-
-                            Text("Keep the lines worth keeping.")
-                                .font(.title3.weight(.semibold))
-                                .foregroundStyle(.ink)
-
-                            Text("Capture fast. Review cleanly. Find them later.")
-                                .font(.subheadline)
-                                .foregroundStyle(.inkSoft)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            HStack(spacing: Space.md) {
-                                LibraryStatView(label: "Books", value: "\(store.books.count)")
-                                LibraryStatView(label: "Quotes", value: "\(store.books.reduce(0) { $0 + $1.quoteCount })")
-                            }
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: Space.md) {
-                        HStack {
-                            Text("Books")
-                                .font(.headline)
-                                .foregroundStyle(.ink)
-
-                            Spacer()
-
-                            if !store.books.isEmpty {
-                                Text("\(store.books.count)")
-                                    .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.inkMuted)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 6)
-                                    .background(Color.wash, in: Capsule())
-                            }
-                        }
-
-                        if store.books.isEmpty {
-                            SectionCard {
-                                VStack(alignment: .leading, spacing: Space.sm) {
-                                    Text("No books yet")
-                                        .font(.headline)
-                                        .foregroundStyle(.ink)
-
-                                    Text("Add one book and make sure saving a passage feels effortless.")
+                            if filteredBooks.isEmpty {
+                                SectionCard {
+                                    Text("No books or saved quotes match that search yet.")
                                         .font(.subheadline)
                                         .foregroundStyle(.inkSoft)
-                                        .fixedSize(horizontal: false, vertical: true)
-
-                                    Button("Add your first book") {
-                                        showingAddBook = true
+                                }
+                            } else {
+                                LazyVStack(spacing: Space.md) {
+                                    ForEach(filteredBooks) { book in
+                                        NavigationLink(value: book) {
+                                            BookRowView(book: book)
+                                        }
+                                        .buttonStyle(.plain)
                                     }
-                                    .font(.subheadline.weight(.semibold))
-                                    .foregroundStyle(.paper)
-                                    .padding(.horizontal, Space.md)
-                                    .padding(.vertical, Space.sm)
-                                    .background(Color.ink, in: Capsule())
                                 }
-                            }
-                        } else {
-                            ForEach(store.books) { book in
-                                NavigationLink(value: book) {
-                                    BookRowView(book: book)
-                                }
-                                .buttonStyle(.plain)
                             }
                         }
                     }
                 }
                 .padding(Space.lg)
-                .padding(.bottom, Space.xl)
+                .padding(.bottom, Space.xxl)
                 .appContentColumn()
             }
-            .background(Color.paper.ignoresSafeArea())
-            .navigationTitle("Book Viewer")
+            .appScreenBackground()
+            .navigationTitle("Library")
+            .navigationBarTitleDisplayMode(.large)
+            .searchable(text: $searchText, prompt: "Search books and saved quotes")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showingAddBook = true
                     } label: {
-                        Image(systemName: "plus")
+                        Label("Add", systemImage: "plus")
+                            .font(.subheadline.weight(.semibold))
                     }
+                    .foregroundStyle(.brand)
                 }
             }
             .navigationDestination(for: Book.self) { book in
@@ -113,73 +100,127 @@ struct LibraryView: View {
     }
 }
 
+private struct LibrarySummaryCard: View {
+    let bookCount: Int
+    let quoteCount: Int
+    let onAddBook: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.lg) {
+            VStack(alignment: .leading, spacing: Space.sm) {
+                CapsuleTag(label: "OCR Library", tone: .accent)
+
+                Text("A quiet shelf for the lines you marked on paper.")
+                    .font(.appHero)
+                    .foregroundStyle(.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Keep books visible, quotes readable, and the next capture close at hand.")
+                    .font(.subheadline)
+                    .foregroundStyle(.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Space.sm) {
+                    summaryPills
+                }
+
+                VStack(alignment: .leading, spacing: Space.sm) {
+                    summaryPills
+                }
+            }
+
+            Button(action: onAddBook) {
+                Label("Add Book", systemImage: "plus")
+                    .font(.headline.weight(.semibold))
+            }
+            .buttonStyle(AppPrimaryButtonStyle())
+        }
+        .padding(Space.xl)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [Color.card, Color.paper],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
+                .stroke(Color.quoteBorder.opacity(0.85), lineWidth: StrokeWidth.hairline)
+        }
+        .shadow(color: Color.black.opacity(0.05), radius: 16, y: 6)
+    }
+
+    @ViewBuilder
+    private var summaryPills: some View {
+        SummaryPill(systemImage: "books.vertical", text: "\(bookCount) \(bookCount == 1 ? "book" : "books")")
+        SummaryPill(systemImage: "text.quote", text: "\(quoteCount) saved")
+        SummaryPill(systemImage: "viewfinder.circle", text: "OCR ready")
+    }
+}
+
 private struct BookRowView: View {
     let book: Book
 
     var body: some View {
-        SectionCard {
-            HStack(alignment: .center, spacing: Space.md) {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.wash)
-                    .frame(width: 58, height: 82)
-                    .overlay {
-                        Image(systemName: "book.closed")
-                            .font(.title3)
-                            .foregroundStyle(.inkSoft)
-                    }
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(Color.line, lineWidth: 1)
-                    }
+        HStack(spacing: Space.lg) {
+            CoverArtworkView(title: book.title, author: book.author)
+                .frame(width: 86, height: 118)
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(book.title)
-                        .font(.headline)
-                        .foregroundStyle(.ink)
-                        .lineLimit(2)
+            VStack(alignment: .leading, spacing: Space.sm) {
+                HStack(alignment: .top) {
+                    CapsuleTag(label: book.status, tone: .brand)
 
-                    Text(book.author)
-                        .font(.subheadline)
-                        .foregroundStyle(.inkSoft)
-                        .lineLimit(1)
+                    Spacer(minLength: 0)
 
-                    Text(book.summary)
-                        .font(.footnote)
-                        .foregroundStyle(.inkMuted)
-                        .lineLimit(2)
-
-                    HStack(spacing: Space.sm) {
-                        CapsuleTag(label: book.status)
-                        Text("\(book.quoteCount) saved")
-                            .font(.caption.weight(.medium))
-                            .foregroundStyle(.inkMuted)
-                    }
-                    .padding(.top, Space.xs)
+                    SummaryPill(systemImage: "text.quote", text: "\(book.quoteCount)")
                 }
 
-                Spacer(minLength: 0)
+                Text(book.title)
+                    .font(.appTitle)
+                    .foregroundStyle(.ink)
+                    .lineLimit(2)
+
+                Text(book.author)
+                    .font(.subheadline)
+                    .foregroundStyle(.inkSoft)
+                    .lineLimit(1)
+
+                Text(book.summary)
+                    .font(.footnote)
+                    .foregroundStyle(.inkMuted)
+                    .lineLimit(3)
             }
+
+            Spacer(minLength: 0)
         }
+        .padding(Space.lg)
+        .paperCard()
     }
 }
 
-private struct LibraryStatView: View {
-    let label: String
-    let value: String
+private struct EmptyLibraryCard: View {
+    let onAddBook: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(value)
-                .font(.title3.weight(.semibold))
-                .foregroundStyle(.ink)
+        VStack(alignment: .leading, spacing: Space.lg) {
+            SectionIntro(
+                eyebrow: "Start",
+                title: "No books yet",
+                subtitle: "Create the first book, then capture marked pages into something worth reopening."
+            )
 
-            Text(label)
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.inkMuted)
+            Button(action: onAddBook) {
+                Label("Add your first book", systemImage: "plus")
+                    .font(.headline.weight(.semibold))
+            }
+            .buttonStyle(AppPrimaryButtonStyle())
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Space.md)
-        .background(Color.wash, in: RoundedRectangle(cornerRadius: Radius.sm, style: .continuous))
+        .padding(Space.xl)
+        .paperCard(cornerRadius: Radius.xl)
     }
 }
 
@@ -200,23 +241,74 @@ private struct AddBookSheet: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Book") {
-                    TextField("Title", text: $title)
-                    TextField("Author", text: $author)
+            ScrollView {
+                VStack(alignment: .leading, spacing: Space.xl) {
+                    SectionIntro(
+                        eyebrow: "New Book",
+                        title: "Add a book before you scan against it.",
+                        subtitle: "Keep this quick: title, author, status, and a short reason it belongs on the shelf."
+                    )
 
-                    Picker("Status", selection: $status) {
-                        ForEach(Book.statusOptions, id: \.self) { option in
-                            Text(option).tag(option)
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        Text("Book")
+                            .font(.appSection)
+                            .foregroundStyle(.ink)
+
+                        TextField("Title", text: $title)
+                            .font(.body)
+                            .fieldChrome(minHeight: 52)
+
+                        TextField("Author", text: $author)
+                            .font(.body)
+                            .fieldChrome(minHeight: 52)
+                    }
+                    .padding(Space.lg)
+                    .paperCard()
+
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        Text("Status")
+                            .font(.appSection)
+                            .foregroundStyle(.ink)
+
+                        FlowLayout(spacing: Space.sm) {
+                            ForEach(Book.statusOptions, id: \.self) { option in
+                                Button {
+                                    status = option
+                                } label: {
+                                    CapsuleTag(
+                                        label: option,
+                                        tone: status == option ? .accent : .neutral
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                     }
-                }
+                    .padding(Space.lg)
+                    .paperCard()
 
-                Section("Summary") {
-                    TextField("Optional note about why this book belongs here", text: $summary, axis: .vertical)
-                        .lineLimit(3...5)
+                    VStack(alignment: .leading, spacing: Space.md) {
+                        Text("Why keep it here?")
+                            .font(.appSection)
+                            .foregroundStyle(.ink)
+
+                        TextField(
+                            "A short note about the kind of lines you want to save from this book",
+                            text: $summary,
+                            axis: .vertical
+                        )
+                        .font(.body)
+                        .lineLimit(4...6)
+                        .fieldChrome(minHeight: 110)
+                    }
+                    .padding(Space.lg)
+                    .paperCard()
                 }
+                .padding(Space.lg)
+                .padding(.bottom, 120)
+                .appContentColumn(maxWidth: 680)
             }
+            .appScreenBackground()
             .navigationTitle("Add Book")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -234,8 +326,40 @@ private struct AddBookSheet: View {
                     .disabled(!canSave)
                 }
             }
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 0) {
+                    Divider()
+
+                    Button {
+                        onSave(title, author, status, summary)
+                        dismiss()
+                    } label: {
+                        Text("Save Book")
+                            .font(.headline.weight(.semibold))
+                    }
+                    .buttonStyle(AppPrimaryButtonStyle())
+                    .disabled(!canSave)
+                    .padding(Space.lg)
+                    .background(Color.card.opacity(0.98))
+                }
+            }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents([.large])
+    }
+}
+
+private struct FlowLayout<Content: View>: View {
+    let spacing: CGFloat
+    @ViewBuilder let content: Content
+
+    init(spacing: CGFloat, @ViewBuilder content: () -> Content) {
+        self.spacing = spacing
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
