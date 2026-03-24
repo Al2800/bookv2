@@ -81,7 +81,8 @@ extension Animation {
 
 extension View {
     func appContentColumn(maxWidth: CGFloat = 760) -> some View {
-        frame(maxWidth: maxWidth, alignment: .leading)
+        frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: maxWidth, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .center)
     }
 

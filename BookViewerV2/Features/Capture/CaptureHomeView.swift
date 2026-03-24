@@ -16,40 +16,32 @@ struct CaptureHomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: Space.xl) {
-                    CaptureSummaryCard()
+                    CaptureHeaderView()
 
                     if store.books.isEmpty {
-                        SectionCard {
-                            SectionIntro(
-                                eyebrow: "Library",
-                                title: "Add a book before you scan.",
-                                subtitle: "Capture stays cleaner when every page already has a destination."
-                            )
-                        }
+                        EmptyCaptureState()
                     } else {
-                        CaptureBookSelectionCard(
+                        CaptureWorkspaceCard(
                             books: store.books,
-                            selectedBookID: selectedBookID
-                        )
-
-                        CapturePreviewCard(
+                            selectedBookID: selectedBookID,
                             imageData: capturedImageData,
                             captureNote: $captureNote,
-                            isLoadingImage: isLoadingImage
+                            isLoadingImage: isLoadingImage,
+                            isCameraAvailable: isCameraAvailable,
+                            onCameraTap: { showCamera = true },
+                            selectedPhotoItem: $selectedPhotoItem
                         )
 
-                        captureActionButtons
-
-                        CaptureGuideCard(guidance: store.draftCapture.guidance)
+                        CaptureTipsStrip()
                     }
                 }
                 .padding(Space.lg)
-                .padding(.bottom, 140)
+                .padding(.bottom, 148)
                 .appContentColumn()
             }
             .appScreenBackground()
-            .navigationTitle("Capture")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationDestination(isPresented: $showReview) {
                 CaptureReviewView(draft: store.draftCapture)
             }
@@ -92,55 +84,13 @@ struct CaptureHomeView: View {
         store.books.first(where: { $0.id == selectedBookID.wrappedValue })
     }
 
-    @ViewBuilder
-    private var captureActionButtons: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: Space.md) {
-                cameraActionButton
-                photoLibraryActionButton
-            }
-
-            VStack(spacing: Space.md) {
-                cameraActionButton
-                photoLibraryActionButton
-            }
-        }
-    }
-
-    private var cameraActionButton: some View {
-        Button {
-            showCamera = true
-        } label: {
-            CaptureModeButtonLabel(
-                title: isCameraAvailable ? "Use Camera" : "Camera Unavailable",
-                subtitle: isCameraAvailable ? "Take a page shot right now" : "Use a device with a camera",
-                systemImage: "camera.fill",
-                tone: .brand
-            )
-        }
-        .buttonStyle(.plain)
-        .disabled(!isCameraAvailable)
-    }
-
-    private var photoLibraryActionButton: some View {
-        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
-            CaptureModeButtonLabel(
-                title: "Import Photo",
-                subtitle: "Pull in an existing page capture",
-                systemImage: "photo.on.rectangle.angled",
-                tone: .accent
-            )
-        }
-        .buttonStyle(.plain)
-    }
-
     private var reviewBar: some View {
         VStack(spacing: 0) {
             Divider()
 
             VStack(spacing: Space.sm) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .center) {
+                    VStack(alignment: .leading, spacing: 3) {
                         Text("Ready for review")
                             .font(.headline.weight(.semibold))
                             .foregroundStyle(.ink)
@@ -163,7 +113,7 @@ struct CaptureHomeView: View {
                     beginReview()
                 } label: {
                     Label(
-                        isExtractingText ? "Extracting text…" : "Run OCR and Review",
+                        isExtractingText ? "Extracting OCR…" : "Review OCR Draft",
                         systemImage: "text.viewfinder"
                     )
                     .font(.headline.weight(.semibold))
@@ -232,57 +182,78 @@ struct CaptureHomeView: View {
     }
 }
 
-private struct CaptureSummaryCard: View {
+private struct CaptureHeaderView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.sm) {
+            CapsuleTag(label: "Capture", tone: .accent)
+
+            Text("One page in. One clean quote out.")
+                .font(.appHero)
+                .foregroundStyle(.ink)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Choose the book, frame the marked passage, and move straight into OCR review.")
+                .font(.subheadline)
+                .foregroundStyle(.inkSoft)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct EmptyCaptureState: View {
     var body: some View {
         VStack(alignment: .leading, spacing: Space.lg) {
-            VStack(alignment: .leading, spacing: Space.sm) {
-                CapsuleTag(label: "OCR First", tone: .accent)
-
-                Text("Scan one marked page and keep the review clean.")
-                    .font(.appHero)
-                    .foregroundStyle(.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text("Use the faster v1-style flow: choose the book, frame the page, then trim the OCR draft before saving.")
-                    .font(.subheadline)
-                    .foregroundStyle(.inkSoft)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: Space.sm) {
-                    SummaryPill(systemImage: "camera", text: "Single page")
-                    SummaryPill(systemImage: "text.viewfinder", text: "OCR review")
-                    SummaryPill(systemImage: "books.vertical", text: "Book-linked")
-                }
-
-                VStack(alignment: .leading, spacing: Space.sm) {
-                    SummaryPill(systemImage: "camera", text: "Single page")
-                    SummaryPill(systemImage: "text.viewfinder", text: "OCR review")
-                    SummaryPill(systemImage: "books.vertical", text: "Book-linked")
-                }
-            }
+            SectionIntro(
+                eyebrow: "Library First",
+                title: "Add a book before you capture.",
+                subtitle: "The OCR flow works better when each page already has a destination."
+            )
         }
         .padding(Space.xl)
         .paperCard(cornerRadius: Radius.xl)
     }
 }
 
-private struct CaptureBookSelectionCard: View {
+private struct CaptureWorkspaceCard: View {
     let books: [Book]
     let selectedBookID: Binding<UUID>
+    let imageData: Data?
+    @Binding var captureNote: String
+    let isLoadingImage: Bool
+    let isCameraAvailable: Bool
+    let onCameraTap: () -> Void
+    @Binding var selectedPhotoItem: PhotosPickerItem?
 
     private var selectedBook: Book? {
         books.first(where: { $0.id == selectedBookID.wrappedValue })
     }
 
+    private var previewImage: UIImage? {
+        guard let imageData else { return nil }
+        return UIImage(data: imageData)
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.md) {
-            SectionIntro(
-                eyebrow: "Target Book",
-                title: selectedBook?.title ?? "Choose a book",
-                subtitle: "Keep every scan attached to the right book from the start."
-            )
+        VStack(alignment: .leading, spacing: Space.lg) {
+            HStack(alignment: .top, spacing: Space.md) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Target book")
+                        .font(.appMeta)
+                        .foregroundStyle(.inkMuted)
+
+                    Text(selectedBook?.title ?? "Choose a book")
+                        .font(.appTitle)
+                        .foregroundStyle(.ink)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 0)
+
+                if let selectedBook {
+                    SummaryPill(systemImage: "text.quote", text: "\(selectedBook.quoteCount) saved")
+                }
+            }
 
             Picker("Book", selection: selectedBookID) {
                 ForEach(books) { book in
@@ -292,50 +263,6 @@ private struct CaptureBookSelectionCard: View {
             .pickerStyle(.menu)
             .tint(.brand)
 
-            if let selectedBook {
-                HStack(spacing: Space.md) {
-                    CoverArtworkView(title: selectedBook.title, author: selectedBook.author)
-                        .frame(width: 72, height: 100)
-
-                    VStack(alignment: .leading, spacing: Space.xs) {
-                        Text(selectedBook.author)
-                            .font(.subheadline)
-                            .foregroundStyle(.inkSoft)
-
-                        Text(selectedBook.summary)
-                            .font(.footnote)
-                            .foregroundStyle(.inkMuted)
-                            .lineLimit(3)
-
-                        SummaryPill(systemImage: "text.quote", text: "\(selectedBook.quoteCount) saved")
-                    }
-                }
-                .padding(.top, Space.xs)
-            }
-        }
-        .padding(Space.lg)
-        .paperCard()
-    }
-}
-
-private struct CapturePreviewCard: View {
-    let imageData: Data?
-    @Binding var captureNote: String
-    let isLoadingImage: Bool
-
-    private var previewImage: UIImage? {
-        guard let imageData else { return nil }
-        return UIImage(data: imageData)
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Space.md) {
-            SectionIntro(
-                eyebrow: "Captured Page",
-                title: previewImage == nil ? "No page selected yet" : "Page ready for review",
-                subtitle: "One clear marked passage works best."
-            )
-
             ZStack {
                 RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                     .fill(Color.paperSecondary)
@@ -344,18 +271,18 @@ private struct CapturePreviewCard: View {
                     Image(uiImage: previewImage)
                         .resizable()
                         .scaledToFit()
-                        .padding(Space.md)
+                        .padding(Space.sm)
                 } else {
                     VStack(spacing: Space.sm) {
                         Image(systemName: "text.viewfinder")
-                            .font(.system(size: 34, weight: .medium))
+                            .font(.system(size: 36, weight: .medium))
                             .foregroundStyle(.inkMuted)
 
-                        Text(isLoadingImage ? "Preparing image…" : "Capture or import a page")
+                        Text(isLoadingImage ? "Preparing image…" : "Capture or import a marked page")
                             .font(.headline)
                             .foregroundStyle(.ink)
 
-                        Text("Keep the page square and the marked line fully visible.")
+                        Text("Keep the page square and the marked line fully in frame.")
                             .font(.subheadline)
                             .foregroundStyle(.inkSoft)
                             .multilineTextAlignment(.center)
@@ -363,11 +290,22 @@ private struct CapturePreviewCard: View {
                     }
                 }
             }
-            .frame(height: 320)
-            .clipShape(RoundedRectangle(cornerRadius: Radius.xl, style: .continuous))
+            .frame(height: 380)
             .overlay {
                 RoundedRectangle(cornerRadius: Radius.xl, style: .continuous)
                     .stroke(Color.quoteBorder.opacity(0.9), lineWidth: StrokeWidth.hairline)
+            }
+
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Space.md) {
+                    cameraButton
+                    libraryButton
+                }
+
+                VStack(spacing: Space.md) {
+                    cameraButton
+                    libraryButton
+                }
             }
 
             VStack(alignment: .leading, spacing: Space.xs) {
@@ -375,37 +313,42 @@ private struct CapturePreviewCard: View {
                     .font(.appMeta)
                     .foregroundStyle(.inkMuted)
 
-                TextField("Optional note about the page or the marking", text: $captureNote, axis: .vertical)
+                TextField("Optional note about the passage or the marking", text: $captureNote, axis: .vertical)
                     .lineLimit(2...4)
-                    .fieldChrome(minHeight: 72)
+                    .fieldChrome(minHeight: 70)
             }
         }
         .padding(Space.lg)
-        .paperCard()
+        .paperCard(cornerRadius: Radius.xl)
     }
-}
 
-private struct CaptureGuideCard: View {
-    let guidance: [String]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: Space.md) {
-            SectionIntro(
-                eyebrow: "Flow",
-                title: "Keep the capture loop simple.",
-                subtitle: nil
+    private var cameraButton: some View {
+        Button(action: onCameraTap) {
+            CaptureActionButton(
+                title: isCameraAvailable ? "Use Camera" : "Camera Unavailable",
+                subtitle: isCameraAvailable ? "Take a page shot now" : "Use a device camera",
+                systemImage: "camera.fill",
+                tone: .brand
             )
-
-            ForEach(Array(guidance.enumerated()), id: \.offset) { index, step in
-                CaptureStepRow(number: index + 1, text: step)
-            }
         }
-        .padding(Space.lg)
-        .paperCard()
+        .buttonStyle(.plain)
+        .disabled(!isCameraAvailable)
+    }
+
+    private var libraryButton: some View {
+        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+            CaptureActionButton(
+                title: "Import Photo",
+                subtitle: "Use an existing page image",
+                systemImage: "photo.on.rectangle.angled",
+                tone: .accent
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 
-private struct CaptureModeButtonLabel: View {
+private struct CaptureActionButton: View {
     enum Tone {
         case brand
         case accent
@@ -421,11 +364,11 @@ private struct CaptureModeButtonLabel: View {
             ZStack {
                 Circle()
                     .fill(iconBackground)
-                    .frame(width: 44, height: 44)
+                    .frame(width: 42, height: 42)
 
                 Image(systemName: systemImage)
                     .font(.headline.weight(.semibold))
-                    .foregroundStyle(iconColor)
+                    .foregroundStyle(iconForeground)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -440,14 +383,14 @@ private struct CaptureModeButtonLabel: View {
             }
 
             Spacer(minLength: 0)
-
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.inkMuted)
         }
-        .padding(Space.lg)
+        .padding(Space.md)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .paperCard()
+        .background(Color.card, in: RoundedRectangle(cornerRadius: Radius.lg, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: Radius.lg, style: .continuous)
+                .stroke(Color.quoteBorder.opacity(0.9), lineWidth: StrokeWidth.hairline)
+        }
     }
 
     private var iconBackground: Color {
@@ -459,7 +402,7 @@ private struct CaptureModeButtonLabel: View {
         }
     }
 
-    private var iconColor: Color {
+    private var iconForeground: Color {
         switch tone {
         case .brand:
             return .brand
@@ -469,22 +412,20 @@ private struct CaptureModeButtonLabel: View {
     }
 }
 
-private struct CaptureStepRow: View {
-    let number: Int
-    let text: String
-
+private struct CaptureTipsStrip: View {
     var body: some View {
-        HStack(alignment: .top, spacing: Space.md) {
-            Text("\(number)")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.brand)
-                .frame(width: 26, height: 26)
-                .background(Color.brand.opacity(0.10), in: Circle())
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: Space.sm) {
+                SummaryPill(systemImage: "sun.max", text: "Even light")
+                SummaryPill(systemImage: "viewfinder", text: "Square frame")
+                SummaryPill(systemImage: "highlighter", text: "One marked passage")
+            }
 
-            Text(text)
-                .font(.subheadline)
-                .foregroundStyle(.inkSoft)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: Space.sm) {
+                SummaryPill(systemImage: "sun.max", text: "Even light")
+                SummaryPill(systemImage: "viewfinder", text: "Square frame")
+                SummaryPill(systemImage: "highlighter", text: "One marked passage")
+            }
         }
     }
 }

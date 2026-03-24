@@ -74,20 +74,9 @@ struct LibraryView: View {
                 .appContentColumn()
             }
             .appScreenBackground()
-            .navigationTitle("Library")
-            .navigationBarTitleDisplayMode(.large)
             .searchable(text: $searchText, prompt: "Search books and saved quotes")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingAddBook = true
-                    } label: {
-                        Label("Add", systemImage: "plus")
-                            .font(.subheadline.weight(.semibold))
-                    }
-                    .foregroundStyle(.brand)
-                }
-            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationDestination(for: Book.self) { book in
                 BookDetailView(book: book)
             }
